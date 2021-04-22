@@ -7,12 +7,12 @@ import Foundation
 
 public struct RingBuffer<Element>: ExpressibleByArrayLiteral {
 
-    var backing: ContiguousArray<Element?>
-    var head: Int = 0
-    var tail: Int = 0
+    @usableFromInline var backing: ContiguousArray<Element?>
+    @usableFromInline var head: Int = 0
+    @usableFromInline var tail: Int = 0
 
-    public var isEmpty: Bool { head == tail }
-    public var count: Int {
+    @inlinable public var isEmpty: Bool { head == tail }
+    @inlinable public var count: Int {
         if tail >= head {
             return tail &- head
         } else {
@@ -20,30 +20,28 @@ public struct RingBuffer<Element>: ExpressibleByArrayLiteral {
         }
     }
 
-    var capacity: Int { backing.count }
-    var mask: Int { capacity &- 1 } // capacity will never be zero
+    @usableFromInline var capacity: Int { backing.count }
+    @usableFromInline var mask: Int { capacity &- 1 } // capacity will never be zero
 
     // MARK: - Initialization
 
-    public init(initialCapacity: Int) {
+    @inlinable public init(initialCapacity: Int) {
         let capacity = initialCapacity.nextPowerOf2
         self.backing = ContiguousArray<Element?>(repeating: nil, count: capacity)
     }
 
-    public init() {
+    @inlinable public init() {
         self = .init(initialCapacity: 16)
     }
 
-    public init<S>(_ elements: S) where S: Sequence, Self.Element == S.Element {
+    @inlinable public init<S>(_ elements: S) where S: Sequence, Self.Element == S.Element {
         var buffer = Self(initialCapacity: elements.underestimatedCount)
-        for element in elements {
-            buffer.append(element)
-        }
+        buffer.append(contentsOf: elements)
 
         self = buffer
     }
 
-    public init(arrayLiteral elements: Element...) {
+    @inlinable public init(arrayLiteral elements: Element...) {
         self = Self(elements)
     }
 
@@ -51,21 +49,21 @@ public struct RingBuffer<Element>: ExpressibleByArrayLiteral {
 
     public struct Index: Comparable {
 
-        var _backingIndex: UInt32
-        var isIndexGEQHead: Bool
+        @usableFromInline var _backingIndex: UInt32
+        @usableFromInline var isIndexGEQHead: Bool
 
-        var backingIndex: Int { Int(_backingIndex) }
+        @usableFromInline var backingIndex: Int { Int(_backingIndex) }
 
-        internal init(backingIndex: Int, head: Int) {
+        @usableFromInline internal init(backingIndex: Int, head: Int) {
             self._backingIndex = UInt32(backingIndex)
             self.isIndexGEQHead = backingIndex >= head
         }
 
-        public static func == (l: Index, r: Index) -> Bool {
+        @inlinable public static func == (l: Index, r: Index) -> Bool {
             l._backingIndex == r._backingIndex
         }
 
-        public static func < (l: Index, r: Index) -> Bool {
+        @inlinable public static func < (l: Index, r: Index) -> Bool {
             switch (l.isIndexGEQHead, r.isIndexGEQHead) {
                 case (true, true), (false, false):
                     return l._backingIndex < r._backingIndex
@@ -78,21 +76,19 @@ public struct RingBuffer<Element>: ExpressibleByArrayLiteral {
 
     }
 
-    internal func advance(_ index: inout Int, by offset: Int = 1) {
+    @usableFromInline internal func advance(_ index: inout Int, by offset: Int = 1) {
         index = (index &+ offset) & mask
     }
 
-    internal mutating func advanceHead(by offset: Int = 1) {
+    @usableFromInline internal mutating func advanceHead(by offset: Int = 1) {
         advance(&head, by: offset)
     }
 
-    internal mutating func advanceTail(by offset: Int = 1) {
+    @usableFromInline internal mutating func advanceTail(by offset: Int = 1) {
         advance(&tail, by: offset)
     }
 
-    public mutating func append(_ element: Element) {
-
-
+    @inlinable public mutating func append(_ element: Element) {
         backing[tail] = element
         advanceTail()
 
@@ -101,11 +97,11 @@ public struct RingBuffer<Element>: ExpressibleByArrayLiteral {
         }
     }
 
-    internal mutating func doubleCapacity() {
+    @usableFromInline internal mutating func doubleCapacity() {
         reserveCapacity(capacity * 2)
     }
 
-    public mutating func reserveCapacity(_ newCapacity: Int) {
+    @inlinable public mutating func reserveCapacity(_ newCapacity: Int) {
         let newCapacity = newCapacity.nextPowerOf2
         guard newCapacity > capacity else { return }
 
@@ -135,28 +131,28 @@ public struct RingBuffer<Element>: ExpressibleByArrayLiteral {
 
 extension RingBuffer: MutableCollection {
 
-    public var startIndex: Index {
+    @inlinable public var startIndex: Index {
         Index(backingIndex: head, head: head)
     }
 
-    public var endIndex: Index {
+    @inlinable public var endIndex: Index {
         Index(backingIndex: tail, head: head)
     }
 
-    public func index(_ i: Index, offsetBy distance: Int) -> Index {
+    @inlinable public func index(_ i: Index, offsetBy distance: Int) -> Index {
         Index(backingIndex: (i.backingIndex &+ distance) & mask,
               head: head)
     }
 
-    public func index(after i: Index) -> Index {
+    @inlinable public func index(after i: Index) -> Index {
         index(i, offsetBy: 1)
     }
 
-    public func index(before i: Index) -> Index {
+    @inlinable public func index(before i: Index) -> Index {
         index(i, offsetBy: -1)
     }
 
-    public func distance(from start: Index, to end: Index) -> Int {
+    @inlinable public func distance(from start: Index, to end: Index) -> Int {
         switch (start.isIndexGEQHead, end.isIndexGEQHead) {
             case (true, true), (false, false):
                 return end.backingIndex &- start.backingIndex
@@ -167,17 +163,17 @@ extension RingBuffer: MutableCollection {
         }
     }
 
-    public subscript(position: Int) -> Element {
+    @inlinable public subscript(position: Int) -> Element {
         get { self[index(startIndex, offsetBy: position)] }
         set { self[index(startIndex, offsetBy: position)] = newValue }
     }
 
-    public subscript(position: Index) -> Element {
+    @inlinable public subscript(position: Index) -> Element {
         get { backing[position.backingIndex]! }
         set { backing[position.backingIndex] = newValue }
     }
 
-    public subscript(bounds: Range<Index>) -> RingBuffer<Element> {
+    @inlinable public subscript(bounds: Range<Index>) -> RingBuffer<Element> {
         precondition(distance(from: startIndex, to: bounds.lowerBound) >= 0)
         precondition(distance(from: bounds.upperBound, to: endIndex) >= 0)
 
@@ -195,27 +191,27 @@ extension RingBuffer: RandomAccessCollection {
 
 extension RingBuffer: RangeReplaceableCollection {
 
-    public mutating func popFirst() -> Element? {
+    @inlinable public mutating func popFirst() -> Element? {
         isEmpty ? nil : removeFirst()
     }
 
-    public mutating func popLast() -> Element? {
+    @inlinable public mutating func popLast() -> Element? {
         isEmpty ? nil : removeLast()
     }
 
-    @discardableResult
+    @discardableResult @inlinable
     public mutating func removeFirst() -> Element {
         defer { removeFirst(1) }
         return first!
     }
 
-    @discardableResult
+    @discardableResult @inlinable
     public mutating func removeLast() -> Element {
         defer { removeLast(1) }
         return last!
     }
 
-    public mutating func removeFirst(_ k: Int) {
+    @inlinable public mutating func removeFirst(_ k: Int) {
         var index = head
 
         for _ in 0..<k {
@@ -226,7 +222,7 @@ extension RingBuffer: RangeReplaceableCollection {
         head = index
     }
 
-    public mutating func removeLast(_ k: Int) {
+    @inlinable public mutating func removeLast(_ k: Int) {
         var index = tail
 
         for _ in 0..<k {
@@ -242,7 +238,7 @@ extension RingBuffer: RangeReplaceableCollection {
 
 extension RingBuffer: Equatable where Element: Equatable {
 
-    public static func == (l: Self, r: Self) -> Bool {
+    @inlinable public static func == (l: Self, r: Self) -> Bool {
         l.count == r.count && zip(l, r).allSatisfy(==)
     }
 
@@ -250,7 +246,7 @@ extension RingBuffer: Equatable where Element: Equatable {
 
 extension RingBuffer: Hashable where Element: Hashable {
 
-    public func hash(into hasher: inout Hasher) {
+    @inlinable public func hash(into hasher: inout Hasher) {
         for element in self {
             hasher.combine(element)
         }
@@ -260,7 +256,7 @@ extension RingBuffer: Hashable where Element: Hashable {
 
 extension FixedWidthInteger {
 
-    var nextPowerOf2: Self {
+    @usableFromInline var nextPowerOf2: Self {
         if self == 0 {
             return 1
         }
