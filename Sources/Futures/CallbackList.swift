@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import CircularBuffer
 
 // this file is largely adapted from https://github.com/apple/swift-nio/blob/main/Sources/NIO/EventLoopFuture.swift
 // it's essentially an array of closures, but heavily optimized for containing zero or one closure
@@ -39,14 +38,14 @@ struct CallbackList {
     }
     
     @inlinable
-    var circularBuffer: CircularBuffer<Element> {
-        var buffer = CircularBuffer<Element>.init()
+    var ringBuffer: RingBuffer<Element> {
+        var buffer = RingBuffer<Element>.init()
         appendAllCallbacks(to: &buffer)
         return buffer
     }
     
     @inlinable
-    func appendAllCallbacks(to buffer: inout CircularBuffer<Element>) {
+    func appendAllCallbacks(to buffer: inout RingBuffer<Element>) {
         guard let first = firstCallback else { return }
         
         buffer.reserveCapacity(buffer.count + 1 + (moreCallbacks?.count ?? 0))
@@ -73,7 +72,7 @@ struct CallbackList {
                         callback = first
                         
                     case (.some, .some):
-                        var pendingCallbacks = list.circularBuffer
+                        var pendingCallbacks = list.ringBuffer
                         while let callback = pendingCallbacks.popFirst() {
                             let evenMoreCallbacks = callback()
                             evenMoreCallbacks.appendAllCallbacks(to: &pendingCallbacks)
@@ -84,7 +83,7 @@ struct CallbackList {
             }
         }
         
-        var pendingCallbacks = circularBuffer
+        var pendingCallbacks = ringBuffer
         while let callback = pendingCallbacks.popFirst() {
             let evenMoreCallbacks = callback()
             evenMoreCallbacks.appendAllCallbacks(to: &pendingCallbacks)

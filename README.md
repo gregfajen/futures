@@ -2,10 +2,6 @@
 
 A simple, Swifty Futures library for simplifying asynchronous code in Swift.
 
-The `CircularBuffer` module (Sources/CircularBuffer) is from https://github.com/apple/swift-nio. I pulled a few files rather than importing the whole, fairly large package.
-
-The `Futures` module (Sources/Futures) is written by myself, *except* for `CallbackList.swift`, which is largely adapted from the aforementioned `swift-nio` package. This last file is merely a performance improvement, but it does unfortunately make the code slightly harder to grok.
-
 This repo uses Swift Package Manager: you can open it in Xcode by double-clicking on `Package.swift`.
 
 ## Usage/Examples

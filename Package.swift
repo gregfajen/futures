@@ -20,12 +20,12 @@ let package = Package(
     
     targets: [
         .target(
-            name: "CircularBuffer",
+            name: "Futures",
             dependencies: []
         ),
-        .target(
-            name: "Futures",
-            dependencies: ["CircularBuffer"]
+        .testTarget(
+            name: "FuturesTests",
+            dependencies: ["Futures"]
         )
     ]
 )
