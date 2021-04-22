@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "Futures",
-    platforms: [.iOS(.v12), .macOS(.v10_12)],
+    platforms: [.iOS(.v11), .macOS(.v10_12)],
     
     products: [
         .library(
