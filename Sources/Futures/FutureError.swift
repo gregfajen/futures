@@ -6,12 +6,10 @@
 import Foundation
 
 public struct FutureError: LocalizedError {
-    
     public let message: String
     public var errorDescription: String? { message }
-    
+
     public init(_ message: String) {
         self.message = message
     }
-    
 }

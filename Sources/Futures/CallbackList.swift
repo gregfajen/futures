@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Collections
 
 // this file is largely adapted from https://github.com/apple/swift-nio/blob/main/Sources/NIO/EventLoopFuture.swift
 // it's essentially an array of closures, but heavily optimized for containing zero or one closure
@@ -12,18 +13,17 @@ import Foundation
 
 @usableFromInline
 struct CallbackList {
-    
     @usableFromInline typealias Element = () -> CallbackList
-    
+
     // these are separated so that we only allocate an array for two or more callbacks
     // 99% of the time we don't even have a single callback
     @usableFromInline var firstCallback: Element?
     @usableFromInline var moreCallbacks: ContiguousArray<Element>?
-    
+
     @inlinable static var empty: CallbackList { CallbackList() }
-    
-    @inlinable init() { }
-    
+
+    @inlinable init() {}
+
     @inlinable
     mutating func append(_ callback: @escaping Element) {
         if firstCallback.exists {
@@ -36,58 +36,57 @@ struct CallbackList {
             firstCallback = callback
         }
     }
-    
+
     @inlinable
-    var ringBuffer: RingBuffer<Element> {
-        var buffer = RingBuffer<Element>.init()
+    var ringBuffer: Deque<Element> {
+        var buffer = Deque<Element>()
         appendAllCallbacks(to: &buffer)
         return buffer
     }
-    
+
     @inlinable
-    func appendAllCallbacks(to buffer: inout RingBuffer<Element>) {
+    func appendAllCallbacks(to buffer: inout Deque<Element>) {
         guard let first = firstCallback else { return }
-        
+
         buffer.reserveCapacity(buffer.count + 1 + (moreCallbacks?.count ?? 0))
-        
+
         buffer.append(first)
-        
+
         if let more = moreCallbacks {
             buffer.append(contentsOf: more)
         }
     }
-    
+
     @inlinable
     func run() {
         guard var callback = firstCallback else { return }
-        
+
         guard moreCallbacks.exists else {
             while true {
                 let list = callback()
                 switch (list.firstCallback, list.moreCallbacks) {
-                    case (.none, _): // if first is nil, more is always nil
-                        return
-                        
-                    case (.some(let first), .none):
-                        callback = first
-                        
-                    case (.some, .some):
-                        var pendingCallbacks = list.ringBuffer
-                        while let callback = pendingCallbacks.popFirst() {
-                            let evenMoreCallbacks = callback()
-                            evenMoreCallbacks.appendAllCallbacks(to: &pendingCallbacks)
-                        }
-                        
-                        return
+                case (.none, _): // if first is nil, more is always nil
+                    return
+
+                case let (.some(first), .none):
+                    callback = first
+
+                case (.some, .some):
+                    var pendingCallbacks = list.ringBuffer
+                    while let callback = pendingCallbacks.popFirst() {
+                        let evenMoreCallbacks = callback()
+                        evenMoreCallbacks.appendAllCallbacks(to: &pendingCallbacks)
+                    }
+
+                    return
                 }
             }
         }
-        
+
         var pendingCallbacks = ringBuffer
         while let callback = pendingCallbacks.popFirst() {
             let evenMoreCallbacks = callback()
             evenMoreCallbacks.appendAllCallbacks(to: &pendingCallbacks)
         }
     }
-    
 }

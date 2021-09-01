@@ -4,11 +4,11 @@
 //
 
 import Foundation
-import XCTest
 @testable import Futures
+import XCTest
 
 class FutureTests: XCTestCase {
-
+    
     func testBasic() {
         let e = expectation(description: "")
 
@@ -83,10 +83,12 @@ class FutureTests: XCTestCase {
         let promise = Promise<Int>(on: .background)
         let future = promise.future
 
-        future.map(\.nextPowerOf2).whenSuccess {
-            result = $0
-            e.fulfill()
-        }
+        future
+            .map { $0 + 3 }
+            .whenSuccess {
+                result = $0
+                e.fulfill()
+            }
 
         promise.succeed(5)
 

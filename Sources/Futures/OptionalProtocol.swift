@@ -6,27 +6,19 @@
 import Foundation
 
 public protocol OptionalProtocol {
-    
     associatedtype Wrapped
-    
-    var asOptional: Optional<Wrapped> { get }
-    
+
+    var asOptional: Wrapped? { get }
 }
 
 extension Optional: OptionalProtocol {
-    
-    public var asOptional: Optional<Wrapped> { self }
-    
+    public var asOptional: Wrapped? { self }
 }
 
 public extension Optional {
-    
     var exists: Bool { self != nil }
-    
 }
 
 public extension Sequence where Element: OptionalProtocol {
-    
     var compact: [Element.Wrapped] { compactMap(\.asOptional) }
-    
 }
