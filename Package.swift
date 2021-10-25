@@ -17,14 +17,14 @@ let package = Package(
     dependencies: [
         .package(name: "swift-collections",
                  url: "https://github.com/apple/swift-collections.git",
-                 from: "0.0.7")
+                 from: "0.0.7"),
     ],
 
     targets: [
         .target(
             name: "Futures",
             dependencies: [
-                .product(name: "Collections", package: "swift-collections")
+                .product(name: "Collections", package: "swift-collections"),
             ]
         ),
 

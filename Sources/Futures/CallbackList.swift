@@ -3,8 +3,8 @@
 //  Created by Greg Fajen on 11/10/20.
 //
 
-import Foundation
 import Collections
+import Foundation
 
 // this file is largely adapted from https://github.com/apple/swift-nio/blob/main/Sources/NIO/EventLoopFuture.swift
 // it's essentially an array of closures, but heavily optimized for containing zero or one closure

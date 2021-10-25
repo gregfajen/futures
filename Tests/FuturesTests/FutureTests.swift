@@ -8,7 +8,6 @@ import Foundation
 import XCTest
 
 class FutureTests: XCTestCase {
-    
     func testBasic() {
         let e = expectation(description: "")
 
@@ -95,5 +94,4 @@ class FutureTests: XCTestCase {
         waitForExpectations(timeout: 1)
         XCTAssert(result == 8)
     }
-
 }

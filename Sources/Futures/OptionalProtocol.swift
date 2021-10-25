@@ -9,6 +9,9 @@ public protocol OptionalProtocol {
     associatedtype Wrapped
 
     var asOptional: Wrapped? { get }
+
+    static var none: Self { get }
+
 }
 
 extension Optional: OptionalProtocol {
