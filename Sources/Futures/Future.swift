@@ -109,14 +109,12 @@ public class Future<Value> {
         }
     }
 
-    @discardableResult @inlinable
-    public func whenComplete(_ block: @escaping (R) -> Void) -> Self {
+    @inlinable
+    public func whenComplete(_ block: @escaping (R) -> Void) {
         whenComplete {
             block(self._result!)
             return .empty
         }
-
-        return self
     }
 
     // MARK: - Map
