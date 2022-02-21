@@ -31,8 +31,7 @@ public func || <T>(l: Future<T?>, r: @escaping @autoclosure () -> Future<T>) -> 
 }
 
 public extension Future {
-    @discardableResult
-    @inlinable
+    @discardableResult @inlinable
     func whenSuccess(_ f: @escaping (Value) -> Void) -> Self {
         whenComplete {
             switch $0 {
@@ -43,8 +42,7 @@ public extension Future {
         return self
     }
 
-    @discardableResult
-    @inlinable
+    @discardableResult @inlinable
     func whenFailure(_ f: @escaping (Error) -> Void) -> Self {
         whenComplete {
             switch $0 {

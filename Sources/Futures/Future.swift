@@ -4,6 +4,7 @@
 //
 
 public class Future<Value> {
+
     public typealias R = Result<Value, Error>
     @usableFromInline typealias Callback = CallbackList.Element
 
@@ -19,6 +20,39 @@ public class Future<Value> {
 
     fileprivate init(on queue: FutureQueue) {
         self.queue = queue
+    }
+
+    public convenience init(_ other: Future<Value>) {
+        self.init(on: other.queue)
+        other.whenComplete {
+            self._complete(other._result!)
+        }
+    }
+
+    public convenience init(_ other: Promise<Value>) {
+        self.init(other.future)
+    }
+
+    public convenience init(on queue: FutureQueue,
+                            _ closure: @escaping () throws -> Value)
+    {
+        self.init(queue.submit(closure))
+    }
+
+    public convenience init(on queue: FutureQueue,
+                            _ closure: @escaping (Promise<Value>) throws -> Void)
+    {
+        let promise = Promise<Value>(on: queue)
+
+        queue.async {
+            do {
+                try closure(promise)
+            } catch {
+                promise.fail(error)
+            }
+        }
+
+        self.init(promise.future)
     }
 
     @inlinable func complete(_ result: R) {
@@ -75,12 +109,14 @@ public class Future<Value> {
         }
     }
 
-    @inlinable
-    public func whenComplete(_ block: @escaping (R) -> Void) {
+    @discardableResult @inlinable
+    public func whenComplete(_ block: @escaping (R) -> Void) -> Self {
         whenComplete {
             block(self._result!)
             return .empty
         }
+
+        return self
     }
 
     // MARK: - Map
