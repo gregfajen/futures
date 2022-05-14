@@ -17,7 +17,7 @@ let package = Package(
     dependencies: [
         .package(name: "swift-collections",
                  url: "https://github.com/apple/swift-collections.git",
-                 from: "0.0.7"),
+                 from: "1.0.0"),
     ],
 
     targets: [
